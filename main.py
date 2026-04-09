@@ -314,6 +314,28 @@ async def api_ai_prediction(symbol: str):
         return JSONResponse({"error": str(e)})
 
 
+@app.get("/api/analysis-history")
+async def api_analysis_history():
+    """Get recent AI analysis history for all symbols."""
+    try:
+        history = {}
+        analysis_dir = "/tmp/data/analysis"
+        
+        if os.path.exists(analysis_dir):
+            for filename in os.listdir(analysis_dir):
+                if filename.endswith('.json'):
+                    symbol = filename.replace('_', '/').replace('.json', '')
+                    filepath = os.path.join(analysis_dir, filename)
+                    with open(filepath, 'r') as f:
+                        data = json.load(f)
+                        history[symbol] = data
+        
+        return JSONResponse(history)
+    except Exception as e:
+        logger.error(f"API analysis history error: {e}")
+        return JSONResponse({"error": str(e)})
+
+
 @app.get("/metrics")
 async def metrics():
     """Prometheus-style metrics endpoint."""

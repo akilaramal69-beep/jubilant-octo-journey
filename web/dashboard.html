@@ -18,6 +18,13 @@
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
         .status-dot.paused { background: #ef4444; }
         
+        .tabs { display: flex; gap: 4px; margin-bottom: 15px; }
+        .tab-btn { padding: 8px 16px; background: #16161e; border: 1px solid #2a2a3a; border-radius: 6px; color: #666; cursor: pointer; font-size: 12px; }
+        .tab-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
         .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 15px; }
         .stat-card { background: #16161e; padding: 12px; border-radius: 8px; border: 1px solid #2a2a3a; text-align: center; }
         .stat-value { font-size: 20px; font-weight: 700; color: #6366f1; }
@@ -100,14 +107,20 @@
             </div>
         </header>
         
-        <div class="stats-bar">
-            <div class="stat-card"><div class="stat-value" id="totalScans">0</div><div class="stat-label">Scans</div></div>
-            <div class="stat-card"><div class="stat-value" id="winRate">--</div><div class="stat-label">Win Rate</div></div>
-            <div class="stat-card"><div class="stat-value" id="activePositions">0</div><div class="stat-label">Positions</div></div>
-            <div class="stat-card"><div class="stat-value" id="circuitStatus">Normal</div><div class="stat-label">Circuit</div></div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard',this)">Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('history',this)">Recent Analysis</button>
         </div>
         
-        <div class="main-grid">
+        <div class="tab-content active" id="tab-dashboard">
+            <div class="stats-bar">
+                <div class="stat-card"><div class="stat-value" id="totalScans">0</div><div class="stat-label">Scans</div></div>
+                <div class="stat-card"><div class="stat-value" id="winRate">--</div><div class="stat-label">Win Rate</div></div>
+                <div class="stat-card"><div class="stat-value" id="activePositions">0</div><div class="stat-label">Positions</div></div>
+                <div class="stat-card"><div class="stat-value" id="circuitStatus">Normal</div><div class="stat-label">Circuit</div></div>
+            </div>
+        
+            <div class="main-grid">
             <div class="sidebar">
                 <div class="panel">
                     <div class="panel-header"><span class="panel-title">📊 Symbols</span></div>
@@ -133,6 +146,18 @@
                 </div>
                 <div class="chart-container">
                     <div id="chart"></div>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <div class="tab-content" id="tab-history">
+            <div class="panel" style="margin-bottom:15px">
+                <div class="panel-header"><span class="panel-title">📜 Analysis History</span><button class="analyze-btn" onclick="loadHistory()">Refresh</button></div>
+                <div class="panel-body">
+                    <div id="historyList" style="font-size:12px">
+                        <div class="ai-empty">Loading...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -285,6 +310,53 @@
             document.querySelectorAll('.symbol-btn').forEach(b => b.classList.remove('active'));
             event.target.closest('.symbol-btn').classList.add('active');
             loadChartData();
+        }
+        
+        let currentTab = 'dashboard';
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            currentTab = tab;
+            if (tab === 'history') loadHistory();
+        }
+        
+        async function loadHistory() {
+            const container = document.getElementById('historyList');
+            container.innerHTML = '<div class="ai-loading"><div class="spinner"></div>Loading...</div>';
+            try {
+                const res = await fetch('/api/analysis-history');
+                const data = await res.json();
+                if (data.error) {
+                    container.innerHTML = '<div class="ai-empty">' + data.error + '</div>';
+                    return;
+                }
+                const symbols = Object.keys(data);
+                if (symbols.length === 0) {
+                    container.innerHTML = '<div class="ai-empty">No analysis history yet</div>';
+                    return;
+                }
+                let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">';
+                symbols.forEach(s => {
+                    const d = data[s] || {};
+                    const score = d.score || 0;
+                    const sc = score >= 7 ? 'score-high' : score >= 4 ? 'score-medium' : 'score-low';
+                    const time = d.timestamp ? new Date(d.timestamp*1000).toLocaleString() : 'Unknown';
+                    html += `<div style="background:#0d0d12;padding:12px;border-radius:6px;border-left:3px solid #6366f1">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                            <strong>${s}</strong>
+                            <span class="symbol-btn-score ${sc}">${score}</span>
+                        </div>
+                        <div style="font-size:11px;color:#666">${time}</div>
+                        ${d.recommendation ? `<div style="margin-top:8px;font-size:11px">${d.recommendation}</div>` : ''}
+                    </div>`;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = '<div class="ai-empty">Failed to load history</div>';
+            }
         }
         
         async function loadSymbolList() {
