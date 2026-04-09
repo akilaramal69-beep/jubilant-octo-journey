@@ -7,203 +7,129 @@
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a0f;
-            color: #e0e0e0;
-            min-height: 100vh;
-            padding: 20px;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d12; color: #e0e0e0; min-height: 100vh; padding: 15px; }
         .container { max-width: 1600px; margin: 0 auto; }
         
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 15px 25px;
-            background: #12121a;
-            border-radius: 12px;
-            border: 1px solid #1e1e2e;
-        }
-        .logo { display: flex; align-items: center; gap: 15px; }
-        .logo h1 { font-size: 22px; font-weight: 600; color: #fff; }
-        .logo-icon {
-            width: 36px; height: 36px;
-            background: linear-gradient(135deg, #6c63ff, #8b5cf6);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-        }
-        .status-indicator { display: flex; align-items: center; gap: 10px; }
-        .status-dot {
-            width: 10px; height: 10px; border-radius: 50%;
-            background: #00ff88; box-shadow: 0 0 8px #00ff88;
-            animation: pulse 2s infinite;
-        }
-        .status-dot.paused { background: #ff4466; box-shadow: 0 0 8px #ff4466; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px 20px; background: #16161e; border-radius: 10px; border: 1px solid #2a2a3a; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo h1 { font-size: 18px; font-weight: 600; color: #fff; }
+        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .status-indicator { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #888; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+        .status-dot.paused { background: #ef4444; }
         
-        .stats-bar {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;
-        }
-        .stat-card {
-            background: #12121a; padding: 15px; border-radius: 10px;
-            border: 1px solid #1e1e2e; text-align: center;
-        }
-        .stat-value { font-size: 24px; font-weight: 700; color: #6c63ff; }
-        .stat-label { font-size: 11px; color: #888; margin-top: 4px; text-transform: uppercase; }
+        .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 15px; }
+        .stat-card { background: #16161e; padding: 12px; border-radius: 8px; border: 1px solid #2a2a3a; text-align: center; }
+        .stat-value { font-size: 20px; font-weight: 700; color: #6366f1; }
+        .stat-label { font-size: 10px; color: #666; margin-top: 4px; text-transform: uppercase; }
         
-        .main-grid {
-            display: grid; grid-template-columns: 300px 1fr; gap: 20px;
-        }
+        .main-grid { display: grid; grid-template-columns: 260px 1fr; gap: 15px; }
         
-        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .sidebar { display: flex; flex-direction: column; gap: 15px; }
+        .panel { background: #16161e; border-radius: 10px; border: 1px solid #2a2a3a; }
+        .panel-header { padding: 12px 15px; border-bottom: 1px solid #2a2a3a; display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-size: 14px; font-weight: 600; }
+        .panel-body { padding: 12px; }
         
-        .panel {
-            background: #12121a; border-radius: 12px; border: 1px solid #1e1e2e; overflow: hidden;
-        }
-        .panel-header {
-            padding: 15px 20px; border-bottom: 1px solid #1e1e2e;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .panel-title { font-size: 16px; font-weight: 600; color: #fff; }
-        .panel-body { padding: 15px; }
+        .symbol-list { display: flex; flex-direction: column; gap: 6px; }
+        .symbol-btn { padding: 10px 12px; background: #0d0d12; border: 1px solid #2a2a3a; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+        .symbol-btn:hover { border-color: #6366f1; }
+        .symbol-btn.active { border-color: #6366f1; background: #1e1e2e; }
+        .symbol-btn-header { display: flex; justify-content: space-between; align-items: center; }
+        .symbol-btn-name { font-weight: 600; font-size: 13px; }
+        .symbol-btn-score { padding: 2px 6px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+        .score-high { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .score-medium { background: rgba(234,179,8,0.2); color: #eab308; }
+        .score-low { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .symbol-btn-price { font-size: 11px; color: #666; margin-top: 4px; }
         
-        .symbol-list { display: flex; flex-direction: column; gap: 8px; }
-        .symbol-btn {
-            padding: 12px 15px; background: #0a0a0f; border: 1px solid #1e1e2e;
-            border-radius: 8px; cursor: pointer; text-align: left;
-            transition: all 0.2s;
-        }
-        .symbol-btn:hover { border-color: #6c63ff; }
-        .symbol-btn.active { border-color: #6c63ff; background: #1a1a24; }
-        .symbol-btn-name { font-weight: 600; color: #fff; font-size: 14px; }
-        .symbol-btn-price { font-size: 13px; color: #888; margin-top: 4px; }
-        .symbol-btn-score {
-            float: right; padding: 2px 8px; border-radius: 10px;
-            font-size: 12px; font-weight: 700;
-        }
-        .score-high { background: rgba(0,255,136,0.2); color: #00ff88; }
-        .score-medium { background: rgba(255,193,7,0.2); color: #ffc107; }
-        .score-low { background: rgba(255,68,102,0.2); color: #ff4466; }
+        .chart-panel { display: flex; flex-direction: column; }
+        .chart-controls { display: flex; gap: 8px; padding: 10px 15px; background: #0d0d12; border-bottom: 1px solid #2a2a3a; }
+        .timeframe-btn { padding: 5px 10px; background: #1e1e2e; border: none; border-radius: 4px; color: #888; cursor: pointer; font-size: 11px; }
+        .timeframe-btn.active { background: #6366f1; color: #fff; }
+        .timeframe-btn:hover { background: #2a2a3a; }
+        .current-symbol { margin-left: auto; color: #666; font-size: 12px; }
+        .current-symbol strong { color: #6366f1; margin-left: 5px; }
         
-        .chart-container { height: 400px; position: relative; }
+        .chart-container { height: 350px; position: relative; background: #0d0d12; }
         #chart { width: 100%; height: 100%; }
+        .chart-error { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #666; font-size: 13px; }
         
-        .chart-controls {
-            display: flex; gap: 10px; padding: 10px 15px;
-            background: #0a0a0f; border-bottom: 1px solid #1e1e2e;
-        }
-        .timeframe-btn {
-            padding: 6px 12px; background: #1e1e2e; border: none;
-            border-radius: 6px; color: #888; cursor: pointer; font-size: 12px;
-        }
-        .timeframe-btn.active { background: #6c63ff; color: #fff; }
+        .analyze-btn { padding: 4px 10px; background: #6366f1; border: none; border-radius: 4px; color: #fff; cursor: pointer; font-size: 11px; }
+        .analyze-btn:hover { background: #5558e3; }
         
-        .ai-panel { max-height: 350px; overflow-y: auto; }
-        .ai-analysis {
-            padding: 15px; background: #0a0a0f; border-radius: 8px; margin-bottom: 10px;
-        }
-        .ai-analysis-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px;
-        }
-        .ai-analysis-symbol { font-weight: 700; color: #6c63ff; }
-        .ai-analysis-time { font-size: 11px; color: #666; }
-        .ai-label { font-size: 12px; color: #666; margin-bottom: 4px; }
-        .ai-value { font-size: 14px; color: #e0e0e0; }
-        
-        .pattern-badge {
-            display: inline-block; padding: 3px 8px; background: #6c63ff;
-            border-radius: 4px; font-size: 11px; margin-right: 5px; margin-bottom: 5px;
-        }
-        
-        .prediction-row {
-            display: flex; justify-content: space-between;
-            padding: 8px 0; border-bottom: 1px solid #1e1e2e;
-        }
-        .prediction-label { color: #888; font-size: 12px; }
-        .prediction-value { color: #fff; font-size: 12px; font-weight: 600; }
-        
-        .loading { text-align: center; padding: 40px; color: #666; }
-        .spinner {
-            width: 30px; height: 30px; border: 2px solid #1e1e2e;
-            border-top-color: #6c63ff; border-radius: 50%;
-            animation: spin 1s linear infinite; margin: 0 auto 10px;
-        }
+        .ai-panel { max-height: 300px; overflow-y: auto; font-size: 12px; }
+        .ai-empty { color: #666; text-align: center; padding: 30px; }
+        .ai-loading { text-align: center; padding: 30px; color: #666; }
+        .spinner { width: 20px; height: 20px; border: 2px solid #2a2a3a; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        @media (max-width: 1024px) {
+        .ai-section { margin-bottom: 12px; padding: 10px; background: #0d0d12; border-radius: 6px; }
+        .ai-label { font-size: 10px; color: #666; margin-bottom: 4px; text-transform: uppercase; }
+        .ai-value { font-size: 13px; }
+        .trend-bullish { color: #22c55e; }
+        .trend-bearish { color: #ef4444; }
+        .trend-neutral { color: #eab308; }
+        
+        .pattern-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+        .pattern-tag { padding: 2px 8px; background: rgba(99,102,241,0.2); color: #6366f1; border-radius: 4px; font-size: 10px; }
+        
+        .prediction-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #2a2a3a; }
+        .prediction-row:last-child { border: none; }
+        .pred-label { color: #666; }
+        .pred-value { color: #e0e0e0; font-weight: 500; }
+        
+        .ai-insight { padding: 10px; background: #1e1e2e; border-radius: 6px; border-left: 3px solid #6366f1; margin-top: 10px; }
+        .risk-low { color: #22c55e; }
+        .risk-medium { color: #eab308; }
+        .risk-high { color: #ef4444; }
+        
+        @media (max-width: 900px) {
             .main-grid { grid-template-columns: 1fr; }
-            .chart-container { height: 300px; }
+            .chart-container { height: 280px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo">
-                <div class="logo-icon">🎯</div>
-                <h1>Crypto Sniper Bot</h1>
-            </div>
+            <div class="logo"><div class="logo-icon">🎯</div><h1>Crypto Sniper</h1></div>
             <div class="status-indicator">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Running</span>
-                <span style="color: #666; font-size: 12px;"> | </span>
-                <span id="uptime" style="color: #888; font-size: 12px;">Uptime: --</span>
+                <div class="status-dot" id="statusDot"></div><span id="statusText">Running</span>
+                <span style="color:#444">|</span><span id="uptime">0h</span>
             </div>
         </header>
         
         <div class="stats-bar">
-            <div class="stat-card">
-                <div class="stat-value" id="totalScans">0</div>
-                <div class="stat-label">Total Scans</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="winRate">--</div>
-                <div class="stat-label">Win Rate</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="activePositions">0</div>
-                <div class="stat-label">Active Positions</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="circuitStatus">Normal</div>
-                <div class="stat-label">Circuit Breaker</div>
-            </div>
+            <div class="stat-card"><div class="stat-value" id="totalScans">0</div><div class="stat-label">Scans</div></div>
+            <div class="stat-card"><div class="stat-value" id="winRate">--</div><div class="stat-label">Win Rate</div></div>
+            <div class="stat-card"><div class="stat-value" id="activePositions">0</div><div class="stat-label">Positions</div></div>
+            <div class="stat-card"><div class="stat-value" id="circuitStatus">Normal</div><div class="stat-label">Circuit</div></div>
         </div>
         
         <div class="main-grid">
             <div class="sidebar">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span class="panel-title">📊 Symbols</span>
-                    </div>
-                    <div class="panel-body">
-                        <div class="symbol-list" id="symbolList"></div>
-                    </div>
+                    <div class="panel-header"><span class="panel-title">📊 Symbols</span></div>
+                    <div class="panel-body"><div class="symbol-list" id="symbolList"></div></div>
                 </div>
-                
                 <div class="panel">
                     <div class="panel-header">
                         <span class="panel-title">🤖 AI Analysis</span>
-                        <button onclick="runAIAnalysis()" style="padding: 4px 10px; background: #6c63ff; border: none; border-radius: 4px; color: #fff; cursor: pointer; font-size: 11px;">Analyze</button>
+                        <button class="analyze-btn" onclick="runAIAnalysis()">Analyze</button>
                     </div>
                     <div class="panel-body ai-panel" id="aiPanel">
-                        <div class="loading">Select a symbol and click Analyze</div>
+                        <div class="ai-empty">Click Analyze to get AI insights</div>
                     </div>
                 </div>
             </div>
             
-            <div class="panel">
+            <div class="panel chart-panel">
                 <div class="chart-controls">
-                    <button class="timeframe-btn active" onclick="setTimeframe('1h', this)">1H</button>
-                    <button class="timeframe-btn" onclick="setTimeframe('4h', this)">4H</button>
-                    <button class="timeframe-btn" onclick="setTimeframe('1d', this)">1D</button>
-                    <span style="margin-left: auto; color: #666; font-size: 12px; display: flex; align-items: center;">
-                        Current: <strong id="currentSymbol" style="color: #6c63ff; margin-left: 5px;">BTC/USDT</strong>
-                    </span>
+                    <button class="timeframe-btn active" onclick="setTimeframe('1h',this)">1H</button>
+                    <button class="timeframe-btn" onclick="setTimeframe('4h',this)">4H</button>
+                    <button class="timeframe-btn" onclick="setTimeframe('1d',this)">1D</button>
+                    <span class="current-symbol">Viewing: <strong id="currentSymbol">BTC/USDT</strong></span>
                 </div>
                 <div class="chart-container">
                     <div id="chart"></div>
@@ -213,33 +139,42 @@
     </div>
     
     <script>
-        const SYMBOLS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT', 'DOGE/USDT'];
+        const SYMBOLS = ['BTC/USDT','ETH/USDT','SOL/USDT','BNB/USDT','DOGE/USDT'];
         let currentSymbol = 'BTC/USDT';
-        let chart, candleSeries, volumeSeries;
+        let chart = null, candleSeries = null, volumeSeries = null;
         let currentTimeframe = '1h';
         
-        // Initialize chart
         function initChart() {
-            chart = LightweightCharts.createChart(document.getElementById('chart'), {
-                layout: { background: { color: '#0a0a0f' }, textColor: '#888' },
-                grid: { vertLines: { color: '#1e1e2e' }, horzLines: { color: '#1e1e2e' } },
-                crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-                rightPriceScale: { borderColor: '#1e1e2e' },
-                timeScale: { borderColor: '#1e1e2e', timeVisible: true }
-            });
+            const container = document.getElementById('chart');
+            if (!container) return;
             
-            candleSeries = chart.addCandlestickSeries({
-                upColor: '#00ff88', downColor: '#ff4466', borderUpColor: '#00ff88',
-                borderDownColor: '#ff4466', wickUpColor: '#00ff88', wickDownColor: '#ff4466'
-            });
-            
-            volumeSeries = chart.addHistogramSeries({
-                color: '#6c63ff', priceFormat: { type: 'volume' }, priceScaleId: ''
-            });
-            volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
-            
-            chart.resize();
-            window.addEventListener('resize', () => chart.resize());
+            try {
+                chart = LightweightCharts.createChart(container, {
+                    width: container.clientWidth,
+                    height: container.clientHeight,
+                    layout: { background: { type: 'solid', color: '#0d0d12' }, textColor: '#666' },
+                    grid: { vertLines: { color: '#1e1e2e' }, horzLines: { color: '#1e1e2e' } },
+                    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                    rightPriceScale: { borderColor: '#2a2a3a' },
+                    timeScale: { borderColor: '#2a2a3a', timeVisible: true }
+                });
+                
+                candleSeries = chart.addCandlestickSeries({
+                    upColor: '#22c55e', downColor: '#ef4444', borderUpColor: '#22c55e',
+                    borderDownColor: '#ef4444', wickUpColor: '#22c55e', wickDownColor: '#ef4444'
+                });
+                
+                volumeSeries = chart.addHistogramSeries({
+                    color: '#6366f1', priceFormat: { type: 'volume' }, priceScaleId: ''
+                });
+                volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
+                
+                window.addEventListener('resize', () => {
+                    if (chart && container) chart.resize(container.clientWidth, container.clientHeight);
+                });
+            } catch(e) {
+                console.error('Chart init error:', e);
+            }
         }
         
         function setTimeframe(tf, btn) {
@@ -250,134 +185,97 @@
         }
         
         async function loadChartData() {
+            if (!candleSeries) initChart();
+            if (!candleSeries) return;
+            
             try {
                 const res = await fetch(`/api/chart/${currentSymbol}`);
                 const data = await res.json();
                 
-                if (data.candles && data.candles.length > 0) {
-                    const candles = data.candles.map(c => ({
-                        time: c.time, open: c.open, high: c.high, low: c.low, close: c.close
-                    }));
-                    const volumes = data.candles.map(c => ({
-                        time: c.time, value: c.volume, color: c.close >= c.open ? 'rgba(0,255,136,0.3)' : 'rgba(255,68,102,0.3)'
-                    }));
-                    
-                    candleSeries.setData(candles);
-                    volumeSeries.setData(volumes);
-                    chart.timeScale().fitContent();
+                if (data.error || !data.candles || data.candles.length === 0) {
+                    document.getElementById('chart').innerHTML = '<div class="chart-error">No chart data. Scanner will populate on next scan.</div>';
+                    return;
                 }
-            } catch (e) {
+                
+                document.getElementById('chart').innerHTML = '';
+                initChart();
+                
+                const candles = data.candles.map(c => ({
+                    time: c.time, open: c.open, high: c.high, low: c.low, close: c.close
+                }));
+                const volumes = data.candles.map(c => ({
+                    time: c.time, value: c.volume, 
+                    color: c.close >= c.open ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'
+                }));
+                
+                candleSeries.setData(candles);
+                volumeSeries.setData(volumes);
+                chart.timeScale().fitContent();
+            } catch(e) {
                 console.error('Chart load error:', e);
+                document.getElementById('chart').innerHTML = '<div class="chart-error">Error loading chart</div>';
             }
         }
         
         async function runAIAnalysis() {
             const panel = document.getElementById('aiPanel');
-            panel.innerHTML = '<div class="loading"><div class="spinner"></div>Analyzing...</div>';
+            panel.innerHTML = '<div class="ai-loading"><div class="spinner"></div>Analyzing...</div>';
             
             try {
                 const res = await fetch(`/api/analyze/${currentSymbol}`);
                 const data = await res.json();
                 
                 if (data.error) {
-                    panel.innerHTML = '<div class="loading">' + data.error + '</div>';
+                    panel.innerHTML = '<div class="ai-empty">' + data.error + '</div>';
                     return;
                 }
                 
-                const patterns = data.patterns || {};
-                const predictions = data.predictions || {};
+                const p = data.patterns || {};
+                const pred = data.predictions || {};
                 const ai = data.ai_analysis || {};
                 
-                let html = `
-                    <div class="ai-analysis">
-                        <div class="ai-analysis-header">
-                            <span class="ai-analysis-symbol">${currentSymbol}</span>
-                            <span class="ai-analysis-time">${new Date(data.timestamp).toLocaleString()}</span>
-                        </div>
-                        
-                        <div class="ai-label">📈 Trend</div>
-                        <div class="ai-value" style="color: ${patterns.trend === 'bullish' ? '#00ff88' : patterns.trend === 'bearish' ? '#ff4466' : '#ffc107'}">
-                            ${patterns.trend?.toUpperCase() || 'N/A'}
-                        </div>
-                        
-                        <div class="ai-label" style="margin-top: 12px;">🎯 Patterns</div>
-                        <div>
-                            ${patterns.patterns && patterns.patterns.length > 0 
-                                ? patterns.patterns.map(p => `<span class="pattern-badge">${p.name}</span>`).join('')
-                                : '<span style="color:#666;font-size:12px;">No patterns detected</span>'}
-                        </div>
-                        
-                        <div class="ai-label" style="margin-top: 12px;">📊 Key Levels</div>
-                        <div class="prediction-row">
-                            <span class="prediction-label">Resistance</span>
-                            <span class="prediction-value" style="color:#ff4466">${patterns.resistance_levels?.join(', ') || 'N/A'}</span>
-                        </div>
-                        <div class="prediction-row">
-                            <span class="prediction-label">Support</span>
-                            <span class="prediction-value" style="color:#00ff88">${patterns.support_levels?.join(', ') || 'N/A'}</span>
-                        </div>
-                        
-                        <div class="ai-label" style="margin-top: 12px;">🔮 Predictions (Math)</div>
-                        <div class="prediction-row">
-                            <span class="prediction-label">Next 1</span>
-                            <span class="prediction-value">$${predictions.predicted_prices?.[0] || 'N/A'}</span>
-                        </div>
-                        <div class="prediction-row">
-                            <span class="prediction-label">Next 2</span>
-                            <span class="prediction-value">$${predictions.predicted_prices?.[1] || 'N/A'}</span>
-                        </div>
-                        <div class="prediction-row">
-                            <span class="prediction-label">ATR</span>
-                            <span class="prediction-value">$${predictions.atr || 'N/A'}</span>
-                        </div>
-                        <div class="prediction-row">
-                            <span class="prediction-label">Volatility</span>
-                            <span class="prediction-value">${patterns.volatility || 0}%</span>
-                        </div>
-                    </div>
-                `;
+                const trendClass = p.trend === 'bullish' ? 'trend-bullish' : p.trend === 'bearish' ? 'trend-bearish' : 'trend-neutral';
+                
+                let html = `<div class="ai-section">
+                    <div class="ai-label">Trend</div>
+                    <div class="ai-value ${trendClass}">${(p.trend || 'N/A').toUpperCase()}</div>
+                    <div class="ai-label" style="margin-top:8px">Volatility</div>
+                    <div class="ai-value">${p.volatility || 0}%</div>
+                </div>`;
+                
+                if (p.patterns && p.patterns.length > 0) {
+                    html += `<div class="ai-section">
+                        <div class="ai-label">Patterns</div>
+                        <div class="pattern-tags">${p.patterns.map(x => `<span class="pattern-tag">${x.name}</span>`).join('')}</div>
+                    </div>`;
+                }
+                
+                html += `<div class="ai-section">
+                    <div class="ai-label">Key Levels</div>
+                    <div class="prediction-row"><span class="pred-label">Resistance</span><span class="pred-value" style="color:#ef4444">${(p.resistance_levels||[]).join(', ') || 'N/A'}</span></div>
+                    <div class="prediction-row"><span class="pred-label">Support</span><span class="pred-value" style="color:#22c55e">${(p.support_levels||[]).join(', ') || 'N/A'}</span></div>
+                </div>`;
+                
+                html += `<div class="ai-section">
+                    <div class="ai-label">Predictions</div>
+                    <div class="prediction-row"><span class="pred-label">Next 1</span><span class="pred-value">$${pred.predicted_prices?.[0] || 'N/A'}</span></div>
+                    <div class="prediction-row"><span class="pred-label">Next 2</span><span class="pred-value">$${pred.predicted_prices?.[1] || 'N/A'}</span></div>
+                    <div class="prediction-row"><span class="pred-label">ATR</span><span class="pred-value">$${pred.atr || 'N/A'}</span></div>
+                </div>`;
                 
                 if (ai.analysis) {
-                    html += `
-                        <div class="ai-analysis" style="border-left: 3px solid #6c63ff;">
-                            <div class="ai-label" style="color:#6c63ff;font-weight:600;">🤖 AI Insight</div>
-                            <div class="ai-value" style="margin-top:8px;">${ai.analysis}</div>
-                            ${ai.key_levels ? `<div style="margin-top:8px;color:#888;font-size:12px;">Levels: ${ai.key_levels}</div>` : ''}
-                            ${ai.recommendation ? `<div style="margin-top:8px;padding:8px;background:#1e1e2e;border-radius:4px;font-size:12px;">📋 ${ai.recommendation}</div>` : ''}
-                            ${ai.risk_level ? `<div style="margin-top:8px;font-size:11px;">Risk: <span style="color:${ai.risk_level === 'low' ? '#00ff88' : ai.risk_level === 'high' ? '#ff4466' : '#ffc107'}">${ai.risk_level.toUpperCase()}</span></div>` : ''}
-                        </div>
-                    `;
+                    const riskClass = ai.risk_level === 'low' ? 'risk-low' : ai.risk_level === 'high' ? 'risk-high' : 'risk-medium';
+                    html += `<div class="ai-section">
+                        <div class="ai-label" style="color:#6366f1">AI Insight</div>
+                        <div class="ai-value">${ai.analysis}</div>
+                        ${ai.recommendation ? `<div style="margin-top:8px;padding:8px;background:#1e1e2e;border-radius:4px;font-size:11px">📋 ${ai.recommendation}</div>` : ''}
+                        ${ai.risk_level ? `<div style="margin-top:8px;font-size:11px">Risk: <span class="${riskClass}">${ai.risk_level.toUpperCase()}</span></div>` : ''}
+                    </div>`;
                 }
                 
                 panel.innerHTML = html;
-            } catch (e) {
-                panel.innerHTML = '<div class="loading">Analysis failed: ' + e.message + '</div>';
-            }
-        }
-        
-        async function loadSymbolList() {
-            try {
-                const res = await fetch('/api/status');
-                const status = await res.json();
-                
-                let html = '';
-                SYMBOLS.forEach(sym => {
-                    const data = status[sym] || {};
-                    const score = data.score || 0;
-                    const price = data.price || 0;
-                    const scoreClass = score >= 7 ? 'score-high' : score >= 4 ? 'score-medium' : 'score-low';
-                    
-                    html += `
-                        <div class="symbol-btn ${sym === currentSymbol ? 'active' : ''}" onclick="selectSymbol('${sym}')">
-                            <span class="symbol-btn-name">${sym}</span>
-                            <span class="symbol-btn-score ${scoreClass}">${score}</span>
-                            <div class="symbol-btn-price">$${price.toFixed(2)}</div>
-                        </div>
-                    `;
-                });
-                document.getElementById('symbolList').innerHTML = html;
-            } catch (e) {
-                console.error('Symbol list error:', e);
+            } catch(e) {
+                panel.innerHTML = '<div class="ai-empty">Analysis failed: ' + e.message + '</div>';
             }
         }
         
@@ -389,32 +287,47 @@
             loadChartData();
         }
         
+        async function loadSymbolList() {
+            try {
+                const res = await fetch('/api/status');
+                const status = await res.json();
+                let html = '';
+                SYMBOLS.forEach(s => {
+                    const d = status[s] || {};
+                    const sc = d.score || 0;
+                    const scClass = sc >= 7 ? 'score-high' : sc >= 4 ? 'score-medium' : 'score-low';
+                    html += `<div class="symbol-btn ${s===currentSymbol?'active':''}" onclick="selectSymbol('${s}')">
+                        <div class="symbol-btn-header">
+                            <span class="symbol-btn-name">${s}</span>
+                            <span class="symbol-btn-score ${scClass}">${sc}</span>
+                        </div>
+                        <div class="symbol-btn-price">$${(d.price||0).toFixed(2)}</div>
+                    </div>`;
+                });
+                document.getElementById('symbolList').innerHTML = html;
+            } catch(e) { console.error(e); }
+        }
+        
         async function updateStats() {
             try {
-                const [scannerRes, statsRes, posRes] = await Promise.all([
-                    fetch('/api/scanner'),
-                    fetch('/api/stats'),
-                    fetch('/api/positions')
-                ]);
-                const scanner = await scannerRes.json();
-                const stats = await statsRes.json();
-                const positions = await posRes.json();
+                const [sc, st, pos] = await Promise.all([fetch('/api/scanner'), fetch('/api/stats'), fetch('/api/positions')]);
+                const scanner = await sc.json();
+                const stats = await st.json();
+                const positions = await pos.json();
                 
                 document.getElementById('totalScans').textContent = scanner.total_scans || 0;
                 document.getElementById('activePositions').textContent = Object.keys(positions).length || 0;
                 document.getElementById('winRate').textContent = stats.win_rate ? stats.win_rate + '%' : '--';
                 document.getElementById('circuitStatus').textContent = scanner.circuit_breaker_active ? 'Active' : 'Normal';
                 
-                const statusDot = document.getElementById('statusDot');
+                const dot = document.getElementById('statusDot');
                 document.getElementById('statusText').textContent = scanner.paused ? 'Paused' : 'Running';
-                statusDot.classList.toggle('paused', scanner.paused);
+                dot.classList.toggle('paused', scanner.paused);
                 
                 const h = Math.floor((scanner.uptime_seconds || 0) / 3600);
                 const m = Math.floor((scanner.uptime_seconds || 0) % 3600 / 60);
-                document.getElementById('uptime').textContent = `Uptime: ${h}h ${m}m`;
-            } catch (e) {
-                console.error('Stats error:', e);
-            }
+                document.getElementById('uptime').textContent = `${h}h ${m}m`;
+            } catch(e) { console.error(e); }
         }
         
         initChart();
@@ -422,8 +335,8 @@
         loadSymbolList();
         updateStats();
         
-        setInterval(() => { loadSymbolList(); updateStats(); }, 15000);
-        setInterval(loadChartData, 30000);
+        setInterval(() => { loadSymbolList(); updateStats(); }, 20000);
+        setInterval(loadChartData, 60000);
     </script>
 </body>
 </html>
