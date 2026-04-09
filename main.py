@@ -194,6 +194,63 @@ async def api_balance():
         return JSONResponse({"error": str(e)})
 
 
+@app.get("/api/trades")
+async def api_trades():
+    """Return trade history."""
+    try:
+        filepath = "/tmp/data/trade_history.json"
+        if os.path.exists(filepath):
+            with open(filepath, "r") as f:
+                data = json.load(f)
+            return JSONResponse(data)
+        return JSONResponse({"trades": []})
+    except Exception as e:
+        logger.error(f"API trades error: {e}")
+        return JSONResponse({"error": str(e)})
+
+
+@app.get("/api/stats")
+async def api_stats():
+    """Return trading statistics."""
+    try:
+        trades_file = "/tmp/data/trade_history.json"
+        trades = []
+        if os.path.exists(trades_file):
+            with open(trades_file, "r") as f:
+                data = json.load(f)
+                trades = data.get("trades", [])
+        
+        if not trades:
+            return JSONResponse({
+                "total_trades": 0,
+                "win_rate": 0,
+                "total_pnl": 0,
+                "avg_win": 0,
+                "avg_loss": 0
+            })
+        
+        wins = [t for t in trades if t.get("pnl_pct", 0) > 0]
+        losses = [t for t in trades if t.get("pnl_pct", 0) <= 0]
+        
+        win_rate = len(wins) / len(trades) * 100 if trades else 0
+        total_pnl = sum(t.get("pnl_usd", 0) for t in trades)
+        avg_win = sum(t.get("pnl_pct", 0) for t in wins) / len(wins) if wins else 0
+        avg_loss = sum(t.get("pnl_pct", 0) for t in losses) / len(losses) if losses else 0
+        
+        return JSONResponse({
+            "total_trades": len(trades),
+            "win_rate": round(win_rate, 2),
+            "total_pnl": round(total_pnl, 2),
+            "avg_win": round(avg_win, 2),
+            "avg_loss": round(avg_loss, 2),
+            "wins": len(wins),
+            "losses": len(losses)
+        })
+    except Exception as e:
+        logger.error(f"API stats error: {e}")
+        return JSONResponse({"error": str(e)})
+
+
 @app.get("/metrics")
 async def metrics():
     """Prometheus-style metrics endpoint."""
@@ -243,3 +300,36 @@ crypto_scanner_paused {1 if scanner.is_paused else 0}
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+@app.post("/api/backtest")
+async def api_backtest(days: int = 30, threshold: int = 7):
+    """Run a backtest and return results."""
+    try:
+        from analysis.backtest import run_backtest_sync
+        import asyncio
+        
+        # Run in executor to avoid blocking
+        loop = asyncio.get_event_loop()
+        results = await loop.run_in_executor(
+            None, run_backtest_sync, days, threshold
+        )
+        return JSONResponse(results)
+    except Exception as e:
+        logger.error(f"Backtest failed: {e}")
+        return JSONResponse({"error": str(e)})
+
+
+@app.get("/api/backtest")
+async def get_backtest_results():
+    """Get saved backtest results."""
+    try:
+        filepath = "/tmp/data/backtest_results.json"
+        if os.path.exists(filepath):
+            with open(filepath, "r") as f:
+                data = json.load(f)
+            return JSONResponse(data)
+        return JSONResponse({"error": "No backtest results found"})
+    except Exception as e:
+        logger.error(f"Get backtest error: {e}")
+        return JSONResponse({"error": str(e)})

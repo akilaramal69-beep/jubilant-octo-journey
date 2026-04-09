@@ -13,6 +13,7 @@ from datetime import datetime
 from core.config import settings
 from analysis.technical import TechnicalAnalysis
 from analysis.sentiment import SentimentAnalysis
+from analysis.rss_sentiment import get_hybrid_sentiment
 from execution.executor import TradingExecutor
 
 logger = logging.getLogger(__name__)
@@ -165,10 +166,14 @@ async def analyze_symbol(symbol: str) -> None:
             return
         
         # Step 2: Parallel fetch sentiment and OHLCV
-        sentiment_task = SentimentAnalysis.get_news_sentiment(symbol)
+        # Get Groq sentiment first, then combine with RSS news
+        groq_sentiment_task = SentimentAnalysis.get_news_sentiment(symbol)
         ohlcv_task = _executor.fetch_ohlcv(symbol, "1h", 200)
         
-        sentiment_score, ohlcv_data = await asyncio.gather(sentiment_task, ohlcv_task)
+        groq_sentiment, ohlcv_data = await asyncio.gather(groq_sentiment_task, ohlcv_task)
+        
+        # Combine with RSS sentiment (70% Groq + 30% News)
+        sentiment_score = await get_hybrid_sentiment(symbol, groq_sentiment, use_cache=True)
         
         if not ohlcv_data or len(ohlcv_data) < 30:
             logger.warning(f"Insufficient OHLCV data for {symbol}")

@@ -26,8 +26,15 @@ def _get_cached(key: str) -> tuple[Optional[any], bool]:
 
 
 def _set_cache(key: str, value: any) -> None:
-    """Set cache key with current timestamp."""
-    _indicator_cache[key] = (value, time.time())
+    """Set cache key with current timestamp, evict stale entries."""
+    now = time.time()
+    # Evict expired entries if cache is getting large
+    if len(_indicator_cache) > 500:
+        expired = [k for k, (_, ts) in _indicator_cache.items() 
+                   if now - ts > 300]
+        for k in expired:
+            del _indicator_cache[k]
+    _indicator_cache[key] = (value, now)
 
 
 class TechnicalAnalysis:
@@ -36,7 +43,7 @@ class TechnicalAnalysis:
     @staticmethod
     def calculate_fibonacci_levels(high: float, low: float) -> dict:
         """
-        Calculate Fibonacci retracement levels.
+        Calculate Fibonacci retracement levels (bullish - descending from high).
         
         Args:
             high: High price of the range
@@ -50,13 +57,13 @@ class TechnicalAnalysis:
         
         diff = high - low
         return {
-            "level_0": low,
-            "level_236": low + 0.236 * diff,
-            "level_382": low + 0.382 * diff,
-            "level_500": low + 0.500 * diff,
-            "level_618": low + 0.618 * diff,
-            "level_786": low + 0.786 * diff,
-            "level_100": high
+            "level_0": high,
+            "level_236": high - 0.236 * diff,
+            "level_382": high - 0.382 * diff,
+            "level_500": high - 0.500 * diff,
+            "level_618": high - 0.618 * diff,
+            "level_786": high - 0.786 * diff,
+            "level_100": low
         }
 
     @staticmethod
@@ -276,9 +283,9 @@ class TechnicalAnalysis:
             if len(highs) < 10:
                 return False
             
-            # Bullish BOS: price breaks above highest high of previous 9 candles
-            recent_highs = highs[-10:-1]
-            structure_high = max(recent_highs)
+            # More meaningful: look for prior swing high, not just last 9 candles
+            lookback = min(20, len(highs) - 1)
+            structure_high = max(highs[-lookback:-1])
             
             return price > structure_high
         except Exception as e:
@@ -301,8 +308,8 @@ class TechnicalAnalysis:
             if len(closes) < 30:
                 return "None"
             
-            # Cache check
-            cache_key = f"elliott_{len(closes)}_{closes[-1]:.2f}"
+            # Cache check - use hash of last 10 closes for better precision
+            cache_key = f"elliott_{hash(tuple(closes[-10:]))}"
             cached_result, found = _get_cached(cache_key)
             if found:
                 return cached_result
@@ -319,6 +326,8 @@ class TechnicalAnalysis:
             # Find peaks and troughs
             peaks_idx = argrelextrema(smoothed.values, np.greater, order=order)[0]
             troughs_idx = argrelextrema(smoothed.values, np.less, order=order)[0]
+            peaks_set = set(peaks_idx)
+            troughs_set = set(troughs_idx)
             
             # Merge and sort extrema
             all_extrema = sorted(list(peaks_idx) + list(troughs_idx))
@@ -337,6 +346,10 @@ class TechnicalAnalysis:
                     continue
                 filtered_extrema.append(idx)
                 prev_type = current_type
+            
+            # Ensure sequence starts on a trough for bullish 5-wave
+            while filtered_extrema and filtered_extrema[0] in peaks_set:
+                filtered_extrema.pop(0)
             
             if len(filtered_extrema) < 5:
                 result = "None"
@@ -398,10 +411,12 @@ class TechnicalAnalysis:
             
             if current_price > w3_high:
                 result = "Wave 5 Breakout"
-            elif w4_low < current_price <= w3_high:
+            elif current_price > w4_low:
                 result = "Wave 5 Ignition"
-            else:
+            elif current_price > w0_price:
                 result = "Wave 4 Retracement"
+            else:
+                result = "None"  # pattern failed, price below origin
             
             _set_cache(cache_key, result)
             return result
@@ -485,9 +500,9 @@ class TechnicalAnalysis:
             if close_price <= recent_high:
                 return False
             
-            # Condition 5: FOMO filter - distance from range high <= 0.5 × ATR
-            distance_from_high = high_price - close_price
-            if distance_from_high > 0.5 * atr:
+            # Condition 5: FOMO filter - prevent chasing candles that ran too far past resistance
+            distance_from_range = close_price - recent_high
+            if atr > 0 and distance_from_range > 0.5 * atr:
                 return False
             
             return True

@@ -238,22 +238,51 @@ class RiskManager:
                 if symbol in positions:
                     position = positions[symbol]
                     qty = position["quantity"]
+                    entry = position["entry_price"]
+                    side = position["side"]
+                    opened = position["opened_at"]
+                    
+                    # Get current price for exit
+                    current_price = await executor.get_latest_price(symbol)
                     
                     # Close position
-                    side = position["side"]
                     close_side = "sell" if side == "long" else "buy"
-                    
                     await executor.place_order(symbol, close_side, qty)
+                    
+                    # Calculate PnL
+                    if side == "long":
+                        pnl_pct = (current_price - entry) / entry * 100
+                    else:
+                        pnl_pct = (entry - current_price) / entry * 100
+                    pnl_usd = entry * qty * (pnl_pct / 100)
+                    
+                    # Log trade
+                    await RiskManager.log_trade(
+                        symbol=symbol,
+                        entry_price=entry,
+                        exit_price=current_price,
+                        quantity=qty,
+                        side=side,
+                        entry_time=opened,
+                        exit_time=datetime.now().isoformat(),
+                        reason=reason,
+                        pnl_pct=pnl_pct,
+                        pnl_usd=pnl_usd
+                    )
+                    
                     await RiskManager.remove_position(symbol)
                     
                     await RiskManager._send_telegram(
                         f"🛑 <b>POSITION CLOSED</b>\n\n"
                         f"Symbol: <code>{symbol}</code>\n"
                         f"Reason: <code>{reason}</code>\n"
+                        f"Entry: <code>${entry:.4f}</code>\n"
+                        f"Exit: <code>${current_price:.4f}</code>\n"
+                        f"PnL: <code>{pnl_pct:.2f}%</code>\n"
                         f"Qty: <code>{qty:.6f}</code>"
                     )
                     
-                    logger.info(f"Position closed: {symbol} - {reason}")
+                    logger.info(f"Position closed: {symbol} - {reason} PnL: {pnl_pct:.2f}%")
                     
             except Exception as e:
                 logger.error(f"Failed to close position {symbol}: {e}")
@@ -266,3 +295,46 @@ class RiskManager:
             await TelegramService.send_message(message)
         except Exception as e:
             logger.warning(f"Telegram notification failed: {e}")
+
+    @staticmethod
+    async def log_trade(
+        symbol: str,
+        entry_price: float,
+        exit_price: float,
+        quantity: float,
+        side: str,
+        entry_time: str,
+        exit_time: str,
+        reason: str,
+        pnl_pct: float,
+        pnl_usd: float
+    ) -> None:
+        """Log completed trade to history."""
+        async with _file_lock:
+            history_file = "/tmp/data/trade_history.json"
+            history = _load_json_safe(history_file)
+            
+            trade = {
+                "symbol": symbol,
+                "side": side,
+                "entry_price": entry_price,
+                "exit_price": exit_price,
+                "quantity": quantity,
+                "entry_time": entry_time,
+                "exit_time": exit_time,
+                "reason": reason,
+                "pnl_pct": pnl_pct,
+                "pnl_usd": pnl_usd,
+                "recorded_at": datetime.now().isoformat()
+            }
+            
+            history["trades"] = history.get("trades", [])
+            history["trades"].append(trade)
+            
+            # Keep last 500 trades
+            if len(history["trades"]) > 500:
+                history["trades"] = history["trades"][-500:]
+            
+            _atomic_write_json(history_file, history)
+            
+            logger.info(f"Trade logged: {symbol} {reason} PnL: {pnl_pct:.2f}% (${pnl_usd:.2f})")
