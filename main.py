@@ -84,12 +84,16 @@ async def health():
 async def dashboard():
     """Serve the dashboard HTML."""
     try:
-        with open("crypto_sniper/web/dashboard.html", "r", encoding="utf-8") as f:
+        with open("web/dashboard.html", "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
-        return HTMLResponse(
-            content="<html><body><h1>Dashboard not found</h1></body></html>",
-            status_code=404
+        try:
+            with open("/app/web/dashboard.html", "r", encoding="utf-8") as f:
+                return f.read()
+        except FileNotFoundError:
+            return HTMLResponse(
+                content="<html><body><h1>Dashboard not found</h1></body></html>",
+                status_code=404
         )
 
 
