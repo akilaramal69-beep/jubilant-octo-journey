@@ -251,7 +251,7 @@ async def api_stats():
         return JSONResponse({"error": str(e)})
 
 
-@app.get("/api/chart/{symbol}")
+@app.get("/api/chart/{symbol:path}")
 async def api_chart(symbol: str):
     """Return chart data for a symbol."""
     try:
@@ -276,7 +276,7 @@ async def api_chart(symbol: str):
         return JSONResponse({"error": str(e)})
 
 
-@app.get("/api/analyze/{symbol}")
+@app.get("/api/analyze/{symbol:path}")
 async def api_analyze(symbol: str):
     """Analyze chart patterns and get AI predictions."""
     try:
@@ -299,7 +299,7 @@ async def api_analyze(symbol: str):
         return JSONResponse({"error": str(e)})
 
 
-@app.get("/api/ai-prediction/{symbol}")
+@app.get("/api/ai-prediction/{symbol:path}")
 async def api_ai_prediction(symbol: str):
     """Get cached AI prediction for a symbol."""
     try:
