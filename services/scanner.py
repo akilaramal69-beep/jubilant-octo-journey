@@ -45,14 +45,16 @@ class MarketScanner:
             import os
             
             filepath = "/tmp/data/total_scans.json"
+            data: dict = {}
             if os.path.exists(filepath):
                 with open(filepath, "r") as f:
-                    data = json.load(f)
-                    self._total_scans = data.get("total_scans", 0)
+                    loaded_data = json.load(f)
+                    self._total_scans = loaded_data.get("total_scans", 0)
+                    data = loaded_data
             else:
                 self._total_scans = 0
                 
-            self._scans_start_time = data.get("start_time", datetime.now().isoformat())
+            self._scans_start_time = data.get("start_time", datetime.now().isoformat()) if data else datetime.now().isoformat()
         except:
             self._total_scans = 0
             self._scans_start_time = datetime.now().isoformat()

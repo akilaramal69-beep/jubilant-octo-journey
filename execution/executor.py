@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class TradingExecutor:
-    """Async Binance exchange executor using ccxt."""
+    """Binance exchange executor using ccxt async."""
 
     def __init__(self):
         """Initialize ccxt Binance with API keys."""
@@ -44,7 +44,7 @@ class TradingExecutor:
             Current price as float
         """
         try:
-            ticker = await self.exchange.fetch_ticker(symbol)
+            ticker = self.exchange.fetch_ticker(symbol)
             return float(ticker["last"])
         except Exception as e:
             logger.error(f"Failed to fetch price for {symbol}: {e}")
@@ -63,7 +63,7 @@ class TradingExecutor:
             List of OHLCV data [timestamp, open, high, low, close, volume]
         """
         try:
-            ohlcv = await self.exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
+            ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
             return ohlcv
         except Exception as e:
             logger.error(f"Failed to fetch OHLCV for {symbol}: {e}")
@@ -80,7 +80,7 @@ class TradingExecutor:
             Available balance as float
         """
         try:
-            balance = await self.exchange.fetch_balance()
+            balance = self.exchange.fetch_balance()
             free = balance.get("free", {}).get(currency, 0.0)
             return float(free)
         except Exception as e:
@@ -98,7 +98,7 @@ class TradingExecutor:
             Full ticker dictionary
         """
         try:
-            ticker = await self.exchange.fetch_ticker(symbol)
+            ticker = self.exchange.fetch_ticker(symbol)
             return ticker
         except Exception as e:
             logger.error(f"Failed to fetch ticker for {symbol}: {e}")
@@ -133,7 +133,7 @@ class TradingExecutor:
                 raise ValueError(f"Amount {amount} below minimum {min_amount}")
             
             # Place market order
-            order = await self.exchange.create_order(
+            order = self.exchange.create_order(
                 symbol=symbol,
                 type="market",
                 side=side,
@@ -150,7 +150,7 @@ class TradingExecutor:
     async def close_connection(self) -> None:
         """Close the exchange connection."""
         try:
-            await self.exchange.close()
+            self.exchange.close()
             logger.info("Binance connection closed")
         except Exception as e:
             logger.warning(f"Error closing connection: {e}")
