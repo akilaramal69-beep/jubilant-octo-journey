@@ -10,8 +10,8 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Optional
 
-from fastapi import FastAPI, HTMLResponse, JSONResponse
-from fastapi.responses import PlainTextResponse
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 
 from core.config import settings
 from execution.executor import TradingExecutor
