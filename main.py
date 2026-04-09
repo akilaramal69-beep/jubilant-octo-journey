@@ -251,6 +251,58 @@ async def api_stats():
         return JSONResponse({"error": str(e)})
 
 
+@app.get("/api/chart/{symbol}")
+async def api_chart(symbol: str):
+    """Return chart data for a symbol."""
+    try:
+        from analysis.chart_data import load_ohlcv_data
+        candles = load_ohlcv_data(symbol)
+        if not candles:
+            return JSONResponse({"error": "No chart data available"})
+        return JSONResponse({"symbol": symbol, "candles": candles})
+    except Exception as e:
+        logger.error(f"API chart error: {e}")
+        return JSONResponse({"error": str(e)})
+
+
+@app.get("/api/analyze/{symbol}")
+async def api_analyze(symbol: str):
+    """Analyze chart patterns and get AI predictions."""
+    try:
+        from analysis.chart_data import load_ohlcv_data
+        from analysis.pattern_analysis import full_analysis, save_analysis
+        
+        candles = load_ohlcv_data(symbol)
+        if not candles or len(candles) < 20:
+            return JSONResponse({"error": "Insufficient data for analysis"})
+        
+        # Run full analysis
+        analysis = await full_analysis(symbol, candles)
+        
+        # Save analysis
+        save_analysis(symbol, analysis)
+        
+        return JSONResponse(analysis)
+    except Exception as e:
+        logger.error(f"API analyze error: {e}")
+        return JSONResponse({"error": str(e)})
+
+
+@app.get("/api/ai-prediction/{symbol}")
+async def api_ai_prediction(symbol: str):
+    """Get cached AI prediction for a symbol."""
+    try:
+        filepath = f"/tmp/data/analysis/{symbol.replace('/', '_')}.json"
+        if os.path.exists(filepath):
+            with open(filepath, "r") as f:
+                data = json.load(f)
+            return JSONResponse(data)
+        return JSONResponse({"error": "No analysis available"})
+    except Exception as e:
+        logger.error(f"API prediction error: {e}")
+        return JSONResponse({"error": str(e)})
+
+
 @app.get("/metrics")
 async def metrics():
     """Prometheus-style metrics endpoint."""

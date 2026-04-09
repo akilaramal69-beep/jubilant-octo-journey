@@ -14,6 +14,7 @@ from core.config import settings
 from analysis.technical import TechnicalAnalysis
 from analysis.sentiment import SentimentAnalysis
 from analysis.rss_sentiment import get_hybrid_sentiment
+from analysis.chart_data import save_ohlcv_data
 from execution.executor import TradingExecutor
 
 logger = logging.getLogger(__name__)
@@ -181,6 +182,10 @@ async def analyze_symbol(symbol: str) -> None:
         
         # Extract OHLCV arrays
         ohlcv_df = ohlcv_data  # Already a list of [timestamp, open, high, low, close, volume]
+        
+        # Save chart data for later use
+        save_ohlcv_data(symbol, ohlcv_data)
+        
         closes = [c[4] for c in ohlcv_df]
         highs = [c[2] for c in ohlcv_df]
         lows = [c[3] for c in ohlcv_df]
