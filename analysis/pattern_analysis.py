@@ -46,13 +46,13 @@ def detect_patterns(candles: List[dict]) -> Dict[str, any]:
     strength = 0
     
     # 1. Trend detection
-    ma20 = np.mean(closes[-20:]) if len(closes) >= 20 else closes[-1]
-    ma50 = np.mean(closes[-50:]) if len(closes) >= 50 else closes[-1]
+    ma20 = float(np.mean(closes[-20:])) if len(closes) >= 20 else float(closes[-1])
+    ma50 = float(np.mean(closes[-50:])) if len(closes) >= 50 else float(closes[-1])
     
     trend = "bullish" if ma20 > ma50 else "bearish" if ma20 < ma50 else "neutral"
     
     # 2. Volatility
-    volatility = np.std(closes[-20:]) / np.mean(closes[-20:]) * 100 if len(closes) >= 20 else 0
+    volatility = float(np.std(closes[-20:]) / np.mean(closes[-20:]) * 100) if len(closes) >= 20 else 0
     
     # 3. Support/Resistance levels
     resistance_levels = find_resistance_levels(highs)
@@ -82,20 +82,20 @@ def detect_patterns(candles: List[dict]) -> Dict[str, any]:
         strength += wedge["strength"]
     
     # 7. Volume analysis
-    avg_volume = np.mean(volumes[-20:])
-    recent_volume = np.mean(volumes[-5:])
+    avg_volume = float(np.mean(volumes[-20:]))
+    recent_volume = float(np.mean(volumes[-5:]))
     volume_spike = recent_volume > avg_volume * 1.5
     
     return {
         "trend": trend,
-        "volatility": round(volatility, 2),
+        "volatility": float(round(volatility, 2)),
         "patterns": patterns,
-        "strength": min(strength, 100),
+        "strength": min(int(strength), 100),
         "support_levels": support_levels[:3],
         "resistance_levels": resistance_levels[:3],
-        "volume_spike": volume_spike,
-        "ma20": round(ma20, 2),
-        "ma50": round(ma50, 2)
+        "volume_spike": bool(volume_spike),
+        "ma20": float(round(ma20, 2)),
+        "ma50": float(round(ma50, 2))
     }
 
 
@@ -107,7 +107,7 @@ def find_resistance_levels(highs: np.ndarray, lookback: int = 20) -> List[float]
     local_maxima = []
     for i in range(1, len(highs) - 1):
         if highs[i] > highs[i-1] and highs[i] > highs[i+1]:
-            local_maxima.append(highs[i])
+            local_maxima.append(float(highs[i]))
     
     # Cluster similar levels
     levels = []
@@ -126,7 +126,7 @@ def find_support_levels(lows: np.ndarray, lookback: int = 20) -> List[float]:
     local_minima = []
     for i in range(1, len(lows) - 1):
         if lows[i] < lows[i-1] and lows[i] < lows[i+1]:
-            local_minima.append(lows[i])
+            local_minima.append(float(lows[i]))
     
     levels = []
     for m in local_minima[-5:]:
@@ -141,11 +141,10 @@ def detect_double_top(highs: np.ndarray) -> Dict:
     if len(highs) < 40:
         return {"found": False, "strength": 0}
     
-    # Find two peaks within 5% of each other
     peaks = []
     for i in range(1, len(highs) - 1):
         if highs[i] > highs[i-1] and highs[i] > highs[i+1]:
-            peaks.append((i, highs[i]))
+            peaks.append((i, float(highs[i])))
     
     if len(peaks) >= 2:
         for i in range(len(peaks) - 1):
@@ -166,7 +165,7 @@ def detect_double_bottom(lows: np.ndarray) -> Dict:
     troughs = []
     for i in range(1, len(lows) - 1):
         if lows[i] < lows[i-1] and lows[i] < lows[i+1]:
-            troughs.append((i, lows[i]))
+            troughs.append((i, float(lows[i])))
     
     if len(troughs) >= 2:
         for i in range(len(troughs) - 1):
@@ -187,8 +186,8 @@ def detect_triangle(closes: np.ndarray, highs: np.ndarray, lows: np.ndarray) -> 
     recent_highs = highs[-15:]
     recent_lows = lows[-15:]
     
-    high_slope = (recent_highs[-1] - recent_highs[0]) / len(recent_highs)
-    low_slope = (recent_lows[-1] - recent_lows[0]) / len(recent_lows)
+    high_slope = float((recent_highs[-1] - recent_highs[0]) / len(recent_highs))
+    low_slope = float((recent_lows[-1] - recent_lows[0]) / len(recent_lows))
     
     if high_slope < 0 and low_slope > 0:
         return {"found": True, "type": "Symmetrical Triangle", "strength": 60}
@@ -208,8 +207,8 @@ def detect_wedge(highs: np.ndarray, lows: np.ndarray) -> Dict:
     recent_highs = highs[-20:]
     recent_lows = lows[-20:]
     
-    high_slope = (recent_highs[-1] - recent_highs[0]) / len(recent_highs)
-    low_slope = (recent_lows[-1] - recent_lows[0]) / len(recent_lows)
+    high_slope = float((recent_highs[-1] - recent_highs[0]) / len(recent_highs))
+    low_slope = float((recent_lows[-1] - recent_lows[0]) / len(recent_lows))
     
     # Both moving in same direction but converging
     if high_slope > 0 and low_slope > 0 and high_slope > low_slope:
@@ -240,36 +239,43 @@ def calculate_predictions(candles: List[dict]) -> Dict:
     # Linear regression for trend
     x = np.arange(len(closes))
     slope, intercept = np.polyfit(x, closes, 1)
+    slope = float(slope)
+    intercept = float(intercept)
     
     # Calculate next 3 periods
     future_x = np.array([len(closes), len(closes) + 1, len(closes) + 2])
     future_prices = slope * future_x + intercept
     
     # Volatility-based prediction bands
-    std = np.std(closes[-20:])
+    std = float(np.std(closes[-20:]))
     
     # Fibonacci extension prediction
-    high = np.max(highs[-20:])
-    low = np.min(lows[-20:])
+    high = float(np.max(highs[-20:]))
+    low = float(np.min(lows[-20:]))
     diff = high - low
     
     fib_1618 = high + 0.618 * diff
     fib_2618 = high + 1.618 * diff
     
+    # Calculate ATR safely
+    atr_value = 0.0
+    if len(candles) >= 14:
+        atr_value = float(np.mean(highs[-14:] - lows[-14:]))
+    
     return {
-        "trend_slope": round(slope, 4),
+        "trend_slope": float(round(slope, 4)),
         "trend_direction": "bullish" if slope > 0 else "bearish",
         "predicted_prices": [
-            round(future_prices[0], 2),
-            round(future_prices[1], 2),
-            round(future_prices[2], 2)
+            float(round(future_prices[0], 2)),
+            float(round(future_prices[1], 2)),
+            float(round(future_prices[2], 2))
         ],
-        "volatility_std": round(std, 2),
-        "upper_band": round(closes[-1] + 2 * std, 2),
-        "lower_band": round(closes[-1] - 2 * std, 2),
-        "fib_1618": round(fib_1618, 2),
-        "fib_2618": round(fib_2618, 2),
-        "atr": round(np.mean(highs[-14:] - lows[-14:]), 2) if len(candles) >= 14 else 0
+        "volatility_std": float(round(std, 2)),
+        "upper_band": float(round(closes[-1] + 2 * std, 2)),
+        "lower_band": float(round(closes[-1] - 2 * std, 2)),
+        "fib_1618": float(round(fib_1618, 2)),
+        "fib_2618": float(round(fib_2618, 2)),
+        "atr": atr_value
     }
 
 
