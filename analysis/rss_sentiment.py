@@ -16,9 +16,8 @@ logger = logging.getLogger(__name__)
 
 # RSS feed URLs for crypto news (with priority weights)
 RSS_FEEDS = [
-    ("https://www.coindesk.com/feed/", 0.4),      # High credibility
-    ("https://cointelegraph.com/rss", 0.4),       # High credibility
-    ("https://cryptopanic.com/api/v1/posts/?auth_token=&public=true&kind=news", 0.2),
+    ("https://www.coindesk.com/feed/", 0.5),      # High credibility
+    ("https://cointelegraph.com/rss", 0.5),       # High credibility
 ]
 
 # Weighted keywords for sentiment scoring
