@@ -255,10 +255,21 @@ async def api_stats():
 async def api_chart(symbol: str):
     """Return chart data for a symbol."""
     try:
-        from analysis.chart_data import load_ohlcv_data
+        from analysis.chart_data import load_ohlcv_data, save_ohlcv_data
         candles = load_ohlcv_data(symbol)
+        
+        # If no cached data, fetch live
         if not candles:
-            return JSONResponse({"error": "No chart data available"})
+            try:
+                ohlcv = _executor.fetch_ohlcv(symbol, "1h", 200)
+                if ohlcv:
+                    save_ohlcv_data(symbol, ohlcv)
+                    candles = load_ohlcv_data(symbol)
+            except Exception as fetch_err:
+                logger.warning(f"Could not fetch live data: {fetch_err}")
+        
+        if not candles:
+            return JSONResponse({"error": "No chart data - waiting for scanner"})
         return JSONResponse({"symbol": symbol, "candles": candles})
     except Exception as e:
         logger.error(f"API chart error: {e}")
