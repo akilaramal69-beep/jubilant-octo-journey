@@ -1,0 +1,15 @@
+yamlservice:
+  name: crypto-sniper
+  type: web
+  git:
+    branch: main
+  instance_type: nano
+  ports:
+    - port: 8000
+      protocol: http
+  health_checks:
+    - path: /health
+      port: 8000
+  env:
+    - name: PORT
+      value: "8000"
