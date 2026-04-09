@@ -6,6 +6,7 @@ import logging
 import asyncio
 import time
 from datetime import datetime
+from typing import Optional
 
 from core.config import settings
 from analysis.engine import analyze_symbol
